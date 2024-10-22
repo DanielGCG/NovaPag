@@ -10,6 +10,7 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
+            background-color: #80b56b;
         }
         header {
             background-color: #9c693a;
@@ -18,7 +19,7 @@
             text-align: center;
         }
         nav {
-            background-color: #333;
+            background-color: #4a693e;
             overflow: hidden;
         }
         nav a {
@@ -33,20 +34,26 @@
             background-color: #ddd;
             color: black;
         }
-        imagem_da_semana {
-        }
         main {
             padding: 20px;
             text-align: center;
         }
         footer {
-            background-color: #333;
+            background-color: #4a693e;
             color: white;
             text-align: center;
             padding: 10px 0;
             position: fixed;
             width: 100%;
             bottom: 0;
+        }
+        .imagem-da-semana {
+            border: 5px solid #9c693a; /* Cor da moldura */
+            border-radius: 10px; /* Bordas arredondadas */
+            padding: 10px; /* Espaçamento interno */
+            display: inline-block; /* Para que a moldura se ajuste à imagem */
+            background-color: #fff; /* Fundo da moldura */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra para efeito 3D */
         }
     </style>
 </head>
@@ -64,12 +71,14 @@
 
     <main>
         <h2>Imagem da Semana</h2>
-        <img src="https://photos.fife.usercontent.google.com/pw/AP1GczMJRn0Phs5GcnAm55HIFCOoBPqAeoCp9wvCOzKhikgQl4Pzbg-ul70HgQ=w367-h377-s-no?authuser=3" alt="Imagem da Semana">
-        <p>Seja bem vindo!</p>
+            <div class="imagem-da-semana">
+                <img src="https://lh3.googleusercontent.com/pw/AP1GczMcKq2z_kux_ZdkgGZnjvumfPWSESTelxVTa2UzgjyMByy67loHYH017tP3-B7Oq5O0jesECCz_9lgvCY_exO2aMKaCO7so3pImOVb9YaJuOEjbe6FEk3SsYd_aHmZ49ziuSdHdCxqqYXzOIayemIWI5A=w480-h389-s-no?authuser=0" alt="Imagem da Semana">
+            </div>
+        <p>Gato viado da porra - 2024</p>
     </main>
 
     <footer>
-        <p>&copy; 2024 Seu Site. Todos os direitos reservados.</p>
+        <p>&copy; Site do boteco!</p>
     </footer>
 
 </body>
