@@ -51,13 +51,23 @@
         
         
         .imagem-da-semana {
-            border: 5px solid #9c693a; /* Cor da moldura */
-            border-radius: 10px; /* Bordas arredondadas */
-            padding: 10px; /* Espaçamento interno */
-            display: inline-block; /* Para que a moldura se ajuste à imagem */
-            background-color: #fff; /* Fundo da moldura */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra para efeito 3D */
+            border: 5px solid #9c693a;
+            border-radius: 10px;
+            padding: 10px;
+            display: inline-block;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            max-width: 100%;
+            height: auto;
         }
+
+        @media (max-width: 600px) {
+            .imagem-da-semana {
+                padding: 5px;
+                border-width: 3px;
+            }
+        }
+
     </style>
 </head>
 <body>
