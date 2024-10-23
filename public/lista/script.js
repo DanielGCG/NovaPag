@@ -1,17 +1,22 @@
+// Importando os módulos do Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js";
+import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
 // Configuração do Firebase
 const firebaseConfig = {
-    apiKey: "FB_apiKey",
-    authDomain: "FB_authDomain",
-    projectId: "FB_projectId",
-    storageBucket: "FB_storageBucket",
-    messagingSenderId: "FB_messagingSenderId",
-    appId: "FB_appId"
+    apiKey: "SUA_API_KEY",
+    authDomain: "SEU_AUTH_DOMAIN",
+    projectId: "SEU_PROJECT_ID",
+    storageBucket: "SEU_STORAGE_BUCKET",
+    messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+    appId: "SEU_APP_ID"
 };
 
 // Inicializando Firebase
-const app = firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const storage = firebase.storage();
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
 // Função para adicionar o filme/série à tabela
 function adicionarFilmeTabela(nome, imagemUrl) {
@@ -40,13 +45,13 @@ document.getElementById('uploadForm').addEventListener('submit', function(event)
     
     if (imagem) {
         // Cria uma referência de armazenamento única
-        const storageRef = storage.ref('filmesSeries/' + imagem.name);
+        const storageRef = ref(storage, 'filmesSeries/' + imagem.name);
 
         // Faz o upload da imagem
-        storageRef.put(imagem).then(snapshot => {
-            snapshot.ref.getDownloadURL().then(url => {
+        uploadBytes(storageRef, imagem).then(snapshot => {
+            getDownloadURL(snapshot.ref).then(url => {
                 // Adiciona o filme/série ao Firestore
-                db.collection('filmesSeries').add({
+                addDoc(collection(db, 'filmesSeries'), {
                     nome: nome,
                     imagemUrl: url
                 }).then(() => {
@@ -63,7 +68,7 @@ document.getElementById('uploadForm').addEventListener('submit', function(event)
 
 // Carrega filmes/séries salvos no Firebase
 window.onload = function() {
-    db.collection('filmesSeries').get().then(querySnapshot => {
+    getDocs(collection(db, 'filmesSeries')).then(querySnapshot => {
         querySnapshot.forEach(doc => {
             const data = doc.data();
             adicionarFilmeTabela(data.nome, data.imagemUrl);
