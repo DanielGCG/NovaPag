@@ -1,11 +1,11 @@
 // Configuração do Firebase
 const firebaseConfig = {
-    apiKey: "SUA_API_KEY",
-    authDomain: "SEU_AUTH_DOMAIN",
-    projectId: "SEU_PROJECT_ID",
-    storageBucket: "SEU_STORAGE_BUCKET",
-    messagingSenderId: "SEU_MESSAGING_SENDER_ID",
-    appId: "SEU_APP_ID"
+    apiKey: "FB_apiKey",
+    authDomain: "FB_authDomain",
+    projectId: "FB_projectId",
+    storageBucket: "FB_storageBucket",
+    messagingSenderId: "FB_messagingSenderId",
+    appId: "FB_appId"
 };
 
 // Inicializa Firebase
