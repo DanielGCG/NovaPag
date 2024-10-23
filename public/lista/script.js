@@ -11,6 +11,11 @@ const firebaseConfig = {
 // Inicializa Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+db.settings({
+  experimentalForceLongPolling: true, // Ativar se houver problemas de rede com Firestore
+  useFetchStreams: false // Verifique se isso está correto no seu ambiente
+});
+
 const storage = firebase.storage();
 
 // Função para adicionar filme à tabela
