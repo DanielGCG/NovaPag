@@ -50,8 +50,8 @@ document.getElementById('uploadForm').addEventListener('submit', function(event)
         // Faz upload da imagem
         storageRef.put(imagem).then(snapshot => {
             snapshot.ref.getDownloadURL().then(url => {
-                // Adiciona filme/série ao Firestore
-                db.collection('filmesSeries').add({
+                // Adiciona filme/série à coleção "lista" no Firestore
+                db.collection('lista').add({ // Mudança aqui
                     nome: nome,
                     imagemUrl: url
                 }).then(() => {
@@ -68,7 +68,7 @@ document.getElementById('uploadForm').addEventListener('submit', function(event)
 
 // Carrega filmes/séries salvos
 window.onload = function() {
-    db.collection('filmesSeries').get().then(querySnapshot => {
+    db.collection('lista').get().then(querySnapshot => { // Mudança aqui
         querySnapshot.forEach(doc => {
             const data = doc.data();
             adicionarFilmeTabela(data.nome, data.imagemUrl);
