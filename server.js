@@ -10,7 +10,6 @@ const corsOptions = {
     allowedHeaders: ['Content-Type'],
     credentials: true // Permite o envio de cookies, se necessário
 };
-app.use(cors(corsOptions));
 
 // Serve arquivos estáticos da pasta /public
 app.use(express.static(path.join(__dirname, 'public')));
