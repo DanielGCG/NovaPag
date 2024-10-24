@@ -1,6 +1,10 @@
 [
   {
-    "origin": ["https://sitedoboteco-6393f616ef56.herokuapp.com/", "https://your-firebase-app.firebaseapp.com"],
+    "origin": [
+      "https://sitedoboteco-6393f616ef56.herokuapp.com",
+      "https://siteboteco.firebaseapp.com",
+      "https://siteboteco.web.app"
+    ],
     "method": ["GET", "POST", "PUT", "OPTIONS"],
     "maxAgeSeconds": 3600
   }
