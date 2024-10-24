@@ -1,0 +1,9 @@
+[
+    {
+      "origin": ["https://www.boteco.live"],
+      "method": ["GET", "POST", "PUT", "DELETE"],
+      "maxAge": 3600,
+      "allowHeaders": ["Content-Type"]
+    }
+  ]
+  
