@@ -67,6 +67,12 @@
         td {
             background-color: white;
         }
+        /* Estilo para a mensagem de status */
+        #statusMessage {
+            margin-top: 20px;
+            font-weight: bold;
+            color: red; /* Ou qualquer cor que você preferir */
+        }
     </style>
 </head>
 <body>
@@ -92,6 +98,8 @@
             
             <button type="submit">Adicionar</button>
         </form>
+
+        <p id="statusMessage"></p> <!-- Adiciona a mensagem de status aqui -->
 
         <h2>Lista de Filmes/Séries</h2>
         <table id="filmesSeries">

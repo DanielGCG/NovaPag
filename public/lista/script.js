@@ -12,8 +12,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 db.settings({
-  experimentalForceLongPolling: true, // Ativar se houver problemas de rede com Firestore
-  useFetchStreams: false // Verifique se isso está correto no seu ambiente
+    experimentalForceLongPolling: true, // Ativar se houver problemas de rede com Firestore
+    useFetchStreams: false // Verifique se isso está correto no seu ambiente
 });
 
 const storage = firebase.storage();
@@ -37,41 +37,48 @@ function adicionarFilmeTabela(nome, imagemUrl) {
 }
 
 // Manipula o upload do formulário
-document.getElementById('uploadForm').addEventListener('submit', function(event) {
+document.getElementById('uploadForm').addEventListener('submit', async function(event) {
     event.preventDefault(); 
 
     const nome = document.getElementById('nome').value;
     const imagem = document.getElementById('imagem').files[0];
-    
-    if (imagem) {
-        // Cria referência de armazenamento
-        const storageRef = storage.ref('filmesSeries/' + imagem.name);
+    const statusMessage = document.getElementById('statusMessage');
 
-        // Faz upload da imagem
-        storageRef.put(imagem).then(snapshot => {
-            snapshot.ref.getDownloadURL().then(url => {
-                // Adiciona filme/série à coleção "lista" no Firestore
-                db.collection('lista').add({ // Mudança aqui
-                    nome: nome,
-                    imagemUrl: url
-                }).then(() => {
-                    alert('Filme/Série adicionado com sucesso!');
-                    // Atualiza a tabela
-                    adicionarFilmeTabela(nome, url);
-                }).catch(error => {
-                    console.error('Erro ao adicionar filme:', error);
-                });
+    if (imagem) {
+        try {
+            // Cria referência de armazenamento
+            const storageRef = storage.ref('filmesSeries/' + imagem.name);
+
+            // Faz upload da imagem
+            const snapshot = await storageRef.put(imagem);
+            const url = await snapshot.ref.getDownloadURL();
+
+            // Adiciona filme/série à coleção "lista" no Firestore
+            await db.collection('lista').add({
+                nome: nome,
+                imagemUrl: url
             });
-        });
+
+            alert('Filme/Série adicionado com sucesso!');
+            // Atualiza a tabela
+            adicionarFilmeTabela(nome, url);
+            statusMessage.textContent = ''; // Limpa a mensagem de status
+        } catch (error) {
+            console.error('Erro ao adicionar filme:', error);
+            statusMessage.textContent = 'Erro ao adicionar filme. Tente novamente.'; // Mensagem de erro
+        }
     }
 });
 
 // Carrega filmes/séries salvos
-window.onload = function() {
-    db.collection('lista').get().then(querySnapshot => { // Mudança aqui
+window.onload = async function() {
+    try {
+        const querySnapshot = await db.collection('lista').get();
         querySnapshot.forEach(doc => {
             const data = doc.data();
             adicionarFilmeTabela(data.nome, data.imagemUrl);
         });
-    });
+    } catch (error) {
+        console.error('Erro ao carregar filmes/séries:', error);
+    }
 };
