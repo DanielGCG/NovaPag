@@ -3,6 +3,14 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Configura o CORS para aceitar apenas requisições do domínio específico
+const corsOptions = {
+    origin: 'https://www.boteco.live', // Domínio específico permitido
+    methods: ["GET", "POST", "PUT", "OPTIONS"], // Métodos permitidos
+    allowedHeaders: ['Content-Type'],
+    credentials: true // Permite o envio de cookies, se necessário
+};
+
 // Serve arquivos estáticos da pasta /public
 app.use(express.static(path.join(__dirname, 'public')));
 
