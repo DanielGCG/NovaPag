@@ -18,6 +18,15 @@ db.settings({
 
 const storage = firebase.storage();
 
+// Configura o CORS para aceitar apenas requisições do domínio específico
+const corsOptions = {
+    origin: 'https://www.boteco.live', // Domínio específico permitido
+    methods: ["GET", "POST", "PUT", "OPTIONS"], // Métodos permitidos
+    allowedHeaders: ['Content-Type'],
+    credentials: true // Permite o envio de cookies, se necessário
+};
+app.use(cors(corsOptions));
+
 // Função para adicionar filme à tabela
 function adicionarFilmeTabela(nome, imagemUrl) {
     const table = document.getElementById('filmesSeries').getElementsByTagName('tbody')[0];
