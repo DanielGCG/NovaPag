@@ -1,7 +1,14 @@
 {
-    "name": "t",
+    "name": "meu-site-dinamico",
     "version": "1.0.0",
-    "description": "Projeto de upload de arquivos com Firebase",
-    "main": "public/index.html"
+    "description": "Projeto de upload de arquivos com Firebase e backend dinâmico",
+    "main": "index.js",
+    "scripts": {
+      "start": "node index.js"
+    },
+    "dependencies": {
+      "express": "^4.18.2"
+    }
   }
+  
   
