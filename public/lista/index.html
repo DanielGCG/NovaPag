@@ -7,7 +7,7 @@
     <title>Lista de Filmes/Séries</title>
     <style>
         body {
-            font-family: comic sans ms;
+            font-family: "Comic Sans MS", cursive, sans-serif; /* Correção na fonte */
             margin: 0;
             padding: 0;
             background-color: #80b56b;
@@ -68,17 +68,20 @@
             background-color: white;
         }
         /* Estilo para a mensagem de status */
-        #statusMessage {
-            margin-top: 20px;
-            font-weight: bold;
-            color: red; /* Ou qualquer cor que você preferir */
+        #mensagem {
+            margin: 15px 0;
+            padding: 10px;
+            border: 2px solid transparent;
+            border-radius: 5px;
+            display: none; /* Esconde por padrão */
         }
-        /* Estilo para o loader */
-        #loader {
-            display: none; /* Inicialmente escondido */
-            font-size: 20px;
-            color: white;
-            margin-bottom: 20px;
+        .success {
+            color: green;
+            border-color: green;
+        }
+        .error {
+            color: red;
+            border-color: red;
         }
     </style>
 </head>
@@ -95,22 +98,18 @@
     </nav>
 
     <main>
-        <div id="loader">Carregando...</div> <!-- Loader para feedback visual -->
-        <h2>Adicionar Filme/Série</h2>
-        <form id="uploadForm">
-            <label for="nome">Nome do Filme/Série:</label>
-            <input type="text" id="nome" name="nome" required><br><br>
-            
-            <label for="imagem">Upload da Imagem:</label>
-            <input type="file" id="imagem" name="imagem" accept="image/*" required><br><br>
-            
-            <button type="submit">Adicionar</button>
+        <h2>Lista de Filmes/Séries</h2>
+
+        <!-- Div para exibir mensagens -->
+        <div id="mensagem"></div>
+        
+        <form id="uploadForm" onsubmit="event.preventDefault(); uploadFile();">
+            <input type="text" id="nomeFilme" placeholder="Nome do Filme/Série" required>
+            <input type="file" id="fileInput" accept="image/*" required>
+            <button type="submit">Adicionar Filme</button>
         </form>
 
-        <p id="statusMessage"></p> <!-- Mensagem de status -->
-
-        <h2>Lista de Filmes/Séries</h2>
-        <table id="filmesSeries">
+        <table>
             <thead>
                 <tr>
                     <th>Capa</th>
@@ -118,26 +117,127 @@
                     <th>Assistido?</th>
                 </tr>
             </thead>
-            <tbody>
-                <!-- Conteúdo gerado dinamicamente pelo JavaScript -->
+            <tbody id="listaFilmes">
+                <!-- Os filmes serão listados aqui -->
             </tbody>
         </table>
+
     </main>
 
     <footer>
-        <p>&copy; Site do boteco!</p>
+        <p>&copy;Site do boteco!</p>
     </footer>
 
-    <!-- Firebase App (compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script type="module">
+        // Importar as funções Firebase do SDK
+        import { getStorage, ref, uploadBytes, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-storage.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
 
-    <!-- Firebase Storage (compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+        // Configuração Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDuwnu2XcSTJ1YZkgD4570AtE6uKci_nDQ",
+            authDomain: "boteco-6fcfa.firebaseapp.com",
+            projectId: "boteco-6fcfa",
+            storageBucket: "boteco-6fcfa.appspot.com",
+            messagingSenderId: "531032694476",
+            appId: "1:531032694476:web:6e03bdd824b90fd2b2ec69"
+        };
 
-    <!-- Firebase Firestore (compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const storage = getStorage(app);
 
-    <script type="module" src="script.js"></script>
+        // Função de upload de arquivo
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const nomeFilmeInput = document.getElementById('nomeFilme');
+            const mensagemDiv = document.getElementById('mensagem');
+            const nomeFilme = nomeFilmeInput.value.trim();
+            
+            if (fileInput.files.length === 0) {
+                exibirMensagem('Por favor, selecione um arquivo!', 'error');
+                return;
+            }
 
+            const file = fileInput.files[0];
+            
+            // Verifica se o arquivo é uma imagem
+            if (!file.type.startsWith('image/')) {
+                exibirMensagem('Por favor, selecione um arquivo de imagem válido!', 'error');
+                return;
+            }
+
+            const newFileName = `${nomeFilme}.png`; // Modificar o nome do arquivo
+            const listaFilmesRef = ref(storage, `listaFilmes/${newFileName}`);
+
+            try {
+                // Enviar o arquivo para o Firebase Storage
+                const snapshot = await uploadBytes(listaFilmesRef, file);
+                console.log('Arquivo enviado com sucesso:', snapshot);
+
+                // Obter o URL do arquivo
+                const downloadURL = await getDownloadURL(snapshot.ref);
+                console.log('URL de download:', downloadURL);
+                exibirMensagem(`Arquivo enviado com sucesso! URL de download: ${downloadURL}`, 'success');
+
+                // Adicionar o novo item à lista de filmes
+                adicionarItemLista(downloadURL, nomeFilme);
+
+                // Limpar o formulário
+                fileInput.value = '';
+                nomeFilmeInput.value = '';
+
+            } catch (error) {
+                console.error('Erro ao enviar o arquivo:', error);
+                exibirMensagem('Erro ao enviar o arquivo.', 'error');
+            }
+        }
+
+        // Função para exibir mensagens de erro ou sucesso
+        function exibirMensagem(mensagem, tipo) {
+            const mensagemDiv = document.getElementById('mensagem');
+            mensagemDiv.textContent = mensagem;
+            mensagemDiv.className = tipo === 'success' ? 'success' : 'error';
+            mensagemDiv.style.display = 'block'; // Exibe a mensagem
+
+            // Oculta a mensagem após 5 segundos
+            setTimeout(() => {
+                mensagemDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Função para adicionar o item à lista de filmes
+        function adicionarItemLista(url, nome) {
+            const listaFilmes = document.getElementById('listaFilmes');
+            const item = document.createElement('tr'); // Usar <tr> para adicionar à tabela
+            item.innerHTML = `
+                <td style="text-align: center;">
+                    <img src="${url}" alt="${nome}" style="max-height: 100px; width: auto;">
+                </td>
+                <td>${nome}</td>
+                <td>❌</td>
+            `;
+            listaFilmes.appendChild(item);
+        }
+
+        // Função para listar todos os filmes da pasta no Firebase Storage
+        async function listarFilmes() {
+            const listaFilmesRef = ref(storage, 'listaFilmes/');
+            
+            try {
+                const result = await listAll(listaFilmesRef);
+                result.items.forEach(async (itemRef) => {
+                    const url = await getDownloadURL(itemRef);
+                    adicionarItemLista(url, itemRef.name.replace('.png', '')); // Remover .png do nome
+                });
+            } catch (error) {
+                console.error('Erro ao listar filmes:', error);
+            }
+        }
+
+        // Chamar a função para listar filmes ao carregar a página
+        window.onload = listarFilmes;
+
+    </script>
 </body>
 </html>

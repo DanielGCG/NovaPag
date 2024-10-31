@@ -1,19 +1,18 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Upload de Arquivo</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload de Filmes e Séries</title>
 </head>
 <body>
-  <h1>Upload de Arquivo</h1>
-  <form id="uploadForm">
-    <label for="fileInput">Selecione um arquivo:</label>
-    <input type="file" id="fileInput" name="file">
-    <button type="button" onclick="uploadFile()">Enviar</button>
-  </form>
+    <h1>Upload de Filmes e Séries</h1>
+    <input type="file" id="fileInput">
+    <button onclick="uploadFile()">Enviar</button>
 
-  <!-- Importar o script JavaScript externo -->
-  <script type="module" src="main.js"></script>
+    <h2>Lista de Filmes e Séries</h2>
+    <ul id="listaFilmes"></ul>
+
+    <script type="module" src="main.js"></script>
 </body>
 </html>
