@@ -1,9 +1,4 @@
-// Importar as funções Firebase do SDK
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-storage.js";
-import { getFirestore, collection, addDoc, getDocs, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-
-// Configuração do Firebase
+// Configuração do Firebase (certifique-se de substituir pelas suas credenciais do Firebase)
 const firebaseConfig = {
     apiKey: "FB_apiKey",
     authDomain: "FB_authDomain",
@@ -13,103 +8,100 @@ const firebaseConfig = {
     appId: "FB_appId"
 };
 
-// Inicializa Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const storage = getStorage(app);
+// Inicializar Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const storage = firebase.storage();
 
-// Ativa a persistência offline para Firestore
-enableIndexedDbPersistence(db).catch((error) => {
-    if (error.code === 'failed-precondition') {
-        console.error('Persistência falhou: várias guias abertas');
-    } else if (error.code === 'unimplemented') {
-        console.error('Persistência não suportada no navegador');
-    }
-});
-
-// Função para adicionar filme à tabela
-function adicionarFilmeTabela(nome, imagemUrl) {
-    const table = document.getElementById('filmesSeries').getElementsByTagName('tbody')[0];
-    const newRow = table.insertRow();
-
-    const cell1 = newRow.insertCell(0);
-    const cell2 = newRow.insertCell(1);
-    const cell3 = newRow.insertCell(2);
-
-    const img = document.createElement('img');
-    img.src = imagemUrl;
-    img.style.maxHeight = '100px';
-    cell1.appendChild(img);
-
-    cell2.textContent = nome;
-    cell3.textContent = '❌';
-}
-
-// Função para mostrar e esconder feedback visual de carregamento
+// Função para exibir o loader de carregamento
 function mostrarCarregando(mostrar) {
     const loader = document.getElementById('loader');
-    if (loader) {
-        loader.style.display = mostrar ? 'block' : 'none';
-    }
+    loader.style.display = mostrar ? 'block' : 'none';
 }
 
-// Manipula o upload do formulário com verificações de tipo de arquivo
-document.getElementById('uploadForm').addEventListener('submit', async function(event) {
-    event.preventDefault(); 
+// Função para adicionar filme/série ao Firestore e Storage
+async function adicionarFilmeSerie(event) {
+    event.preventDefault();
 
     const nome = document.getElementById('nome').value;
     const imagem = document.getElementById('imagem').files[0];
     const statusMessage = document.getElementById('statusMessage');
 
-    // Verifica se o arquivo é do tipo suportado
-    const tiposSuportados = ['image/jpeg', 'image/png', 'image/gif'];
-    if (!imagem || !tiposSuportados.includes(imagem.type)) {
-        alert('Por favor, selecione uma imagem válida (JPEG, PNG, GIF).');
+    // Verifica se os dados necessários estão presentes
+    if (!nome || !imagem) {
+        alert("Por favor, preencha todos os campos.");
         return;
     }
 
-    if (imagem) {
-        try {
-            mostrarCarregando(true);
-
-            // Cria referência de armazenamento na pasta "lista"
-            const imgRef = storageRef(storage, `lista/${imagem.name}`);
-
-            // Faz upload da imagem
-            const snapshot = await uploadBytes(imgRef, imagem);
-            const url = await getDownloadURL(snapshot.ref);
-
-            // Adiciona filme/série à coleção "lista" no Firestore
-            await addDoc(collection(db, "lista"), {
-                nome: nome,
-                imagemUrl: url
-            });
-
-            alert('Filme/Série adicionado com sucesso!');
-            // Atualiza a tabela
-            adicionarFilmeTabela(nome, url);
-            statusMessage.textContent = ''; // Limpa a mensagem de status
-        } catch (error) {
-            console.error('Erro ao adicionar filme:', error);
-            statusMessage.textContent = 'Erro ao adicionar filme. Tente novamente.'; // Mensagem de erro
-        } finally {
-            mostrarCarregando(false);
-        }
-    }
-});
-
-// Carrega filmes/séries salvos ao carregar a página
-window.onload = async function() {
+    // Mostra o indicador de carregamento
     mostrarCarregando(true);
+    statusMessage.textContent = "Carregando...";
+
     try {
-        const querySnapshot = await getDocs(collection(db, "lista"));
+        // Faz o upload da imagem para o Firebase Storage
+        const storageRef = storage.ref(`lista/${imagem.name}`);
+        const snapshot = await storageRef.put(imagem);
+        const imagemUrl = await snapshot.ref.getDownloadURL();
+
+        // Adiciona o nome e URL da imagem ao Firestore
+        await db.collection('lista').add({
+            nome: nome,
+            imagemUrl: imagemUrl
+        });
+
+        alert("Filme/Série adicionado com sucesso!");
+        statusMessage.textContent = "Filme/Série adicionado com sucesso!";
+
+        // Atualiza a lista na página após adicionar o item
+        listarFilmesSeries();
+    } catch (error) {
+        console.error("Erro ao adicionar filme:", error);
+        statusMessage.textContent = "Erro ao adicionar filme. Tente novamente.";
+    } finally {
+        mostrarCarregando(false);
+    }
+}
+
+// Função para listar filmes/séries armazenados no Firestore
+async function listarFilmesSeries() {
+    mostrarCarregando(true);
+    const tabelaBody = document.getElementById("filmesSeries").getElementsByTagName("tbody")[0];
+    tabelaBody.innerHTML = ""; // Limpa a tabela antes de listar
+
+    try {
+        // Busca os documentos da coleção 'lista' no Firestore
+        const querySnapshot = await db.collection("lista").get();
         querySnapshot.forEach((doc) => {
             const data = doc.data();
             adicionarFilmeTabela(data.nome, data.imagemUrl);
         });
     } catch (error) {
-        console.error('Erro ao carregar filmes/séries:', error);
+        console.error("Erro ao carregar filmes/séries:", error);
     } finally {
         mostrarCarregando(false);
     }
 }
+
+// Função auxiliar para adicionar uma linha à tabela
+function adicionarFilmeTabela(nome, imagemUrl) {
+    const tabelaBody = document.getElementById("filmesSeries").getElementsByTagName("tbody")[0];
+    const newRow = tabelaBody.insertRow();
+
+    const cell1 = newRow.insertCell(0);
+    const cell2 = newRow.insertCell(1);
+    const cell3 = newRow.insertCell(2);
+
+    const img = document.createElement("img");
+    img.src = imagemUrl;
+    img.style.maxHeight = "100px";
+    cell1.appendChild(img);
+
+    cell2.textContent = nome;
+    cell3.textContent = "❌"; // Ícone de status (pode adicionar uma função para remover futuramente)
+}
+
+// Adiciona o evento de submit ao formulário
+document.getElementById("uploadForm").addEventListener("submit", adicionarFilmeSerie);
+
+// Carrega a lista de filmes/séries ao abrir a página
+window.onload = listarFilmesSeries;
