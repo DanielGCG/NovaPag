@@ -12,6 +12,11 @@ app.get('/api/hello', (req, res) => {
   res.json({ message: 'Olá, esta é uma resposta dinâmica!' });
 });
 
+// Redirecionar todas as outras rotas para o index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // Iniciar o servidor
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
