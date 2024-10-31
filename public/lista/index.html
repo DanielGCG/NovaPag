@@ -7,7 +7,7 @@
     <title>Lista de Filmes/Séries</title>
     <style>
         body {
-            font-family: "Comic Sans MS", cursive, sans-serif; /* Correção na fonte */
+            font-family: "Comic Sans MS", cursive, sans-serif;
             margin: 0;
             padding: 0;
             background-color: #80b56b;
@@ -41,7 +41,7 @@
             padding: 20px;
             text-align: center;
             flex: 1;
-            overflow-y: auto; /* Permite rolagem */
+            overflow-y: auto;
         }
         footer {
             background-color: #4a693e;
@@ -67,13 +67,12 @@
         td {
             background-color: white;
         }
-        /* Estilo para a mensagem de status */
         #mensagem {
             margin: 15px 0;
             padding: 10px;
             border: 2px solid transparent;
             border-radius: 5px;
-            display: none; /* Esconde por padrão */
+            display: none;
         }
         .success {
             color: green;
@@ -99,15 +98,13 @@
 
     <main>
         <h2>Lista de Filmes/Séries</h2>
-
-        <!-- Div para exibir mensagens -->
         <div id="mensagem"></div>
         
-        <form id="uploadForm" onsubmit="event.preventDefault(); uploadFile();">
+        <form id="uploadForm" onsubmit="uploadFile(); return false;">
             <input type="text" id="nomeFilme" placeholder="Nome do Filme/Série" required>
             <input type="file" id="fileInput" accept="image/*" required>
             <button type="submit">Adicionar Filme</button>
-        </form>
+        </form>             
 
         <table>
             <thead>
@@ -117,9 +114,7 @@
                     <th>Assistido?</th>
                 </tr>
             </thead>
-            <tbody id="listaFilmes">
-                <!-- Os filmes serão listados aqui -->
-            </tbody>
+            <tbody id="listaFilmes"></tbody>
         </table>
 
     </main>
@@ -129,11 +124,9 @@
     </footer>
 
     <script type="module">
-        // Importar as funções Firebase do SDK
         import { getStorage, ref, uploadBytes, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-storage.js";
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
 
-        // Configuração Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDuwnu2XcSTJ1YZkgD4570AtE6uKci_nDQ",
             authDomain: "boteco-6fcfa.firebaseapp.com",
@@ -143,7 +136,6 @@
             appId: "1:531032694476:web:6e03bdd824b90fd2b2ec69"
         };
 
-        // Inicializar Firebase
         const app = initializeApp(firebaseConfig);
         const storage = getStorage(app);
 
@@ -160,36 +152,27 @@
             }
 
             const file = fileInput.files[0];
-            
-            // Verifica se o arquivo é uma imagem
             if (!file.type.startsWith('image/')) {
                 exibirMensagem('Por favor, selecione um arquivo de imagem válido!', 'error');
                 return;
             }
 
-            const newFileName = `${nomeFilme}.png`; // Modificar o nome do arquivo
+            const newFileName = `${nomeFilme}.png`;
             const listaFilmesRef = ref(storage, `listaFilmes/${newFileName}`);
 
             try {
-                // Enviar o arquivo para o Firebase Storage
                 const snapshot = await uploadBytes(listaFilmesRef, file);
-                console.log('Arquivo enviado com sucesso:', snapshot);
-
-                // Obter o URL do arquivo
                 const downloadURL = await getDownloadURL(snapshot.ref);
-                console.log('URL de download:', downloadURL);
-                exibirMensagem(`Arquivo enviado com sucesso! URL de download: ${downloadURL}`, 'success');
+                exibirMensagem(`Arquivo enviado com sucesso!`, 'success');
 
-                // Adicionar o novo item à lista de filmes
                 adicionarItemLista(downloadURL, nomeFilme);
-
-                // Limpar o formulário
                 fileInput.value = '';
                 nomeFilmeInput.value = '';
 
+
+
             } catch (error) {
-                console.error('Erro ao enviar o arquivo:', error);
-                exibirMensagem('Erro ao enviar o arquivo.', 'error');
+                exibirMensagem('Erro ao enviar o arquivo. Tente novamente.', 'error');
             }
         }
 
@@ -198,9 +181,8 @@
             const mensagemDiv = document.getElementById('mensagem');
             mensagemDiv.textContent = mensagem;
             mensagemDiv.className = tipo === 'success' ? 'success' : 'error';
-            mensagemDiv.style.display = 'block'; // Exibe a mensagem
+            mensagemDiv.style.display = 'block';
 
-            // Oculta a mensagem após 5 segundos
             setTimeout(() => {
                 mensagemDiv.style.display = 'none';
             }, 5000);
@@ -209,7 +191,7 @@
         // Função para adicionar o item à lista de filmes
         function adicionarItemLista(url, nome) {
             const listaFilmes = document.getElementById('listaFilmes');
-            const item = document.createElement('tr'); // Usar <tr> para adicionar à tabela
+            const item = document.createElement('tr');
             item.innerHTML = `
                 <td style="text-align: center;">
                     <img src="${url}" alt="${nome}" style="max-height: 100px; width: auto;">
@@ -228,7 +210,7 @@
                 const result = await listAll(listaFilmesRef);
                 result.items.forEach(async (itemRef) => {
                     const url = await getDownloadURL(itemRef);
-                    adicionarItemLista(url, itemRef.name.replace('.png', '')); // Remover .png do nome
+                    adicionarItemLista(url, itemRef.name.replace('.png', ''));
                 });
             } catch (error) {
                 console.error('Erro ao listar filmes:', error);
@@ -237,6 +219,9 @@
 
         // Chamar a função para listar filmes ao carregar a página
         window.onload = listarFilmes;
+
+        // Definir a função uploadFile como global
+        window.uploadFile = uploadFile;
 
     </script>
 </body>
