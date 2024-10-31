@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Lista de Filmes/Séries</title>
+    <style>
+        body {
+            font-family: comic sans ms;
+            margin: 0;
+            padding: 0;
+            background-color: #80b56b;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            background-color: #9c693a;
+            color: white;
+            padding: 10px 0;
+            text-align: center;
+        }
+        nav {
+            background-color: #4a693e;
+            overflow: hidden;
+        }
+        nav a {
+            float: left;
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+        nav a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+        main {
+            padding: 20px;
+            text-align: center;
+            flex: 1;
+            overflow-y: auto; /* Permite rolagem */
+        }
+        footer {
+            background-color: #4a693e;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 3px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #9c693a;
+            color: white;
+        }
+        td {
+            background-color: white;
+        }
+        /* Estilo para a mensagem de status */
+        #statusMessage {
+            margin-top: 20px;
+            font-weight: bold;
+            color: red; /* Ou qualquer cor que você preferir */
+        }
+        /* Estilo para o loader */
+        #loader {
+            display: none; /* Inicialmente escondido */
+            font-size: 20px;
+            color: white;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Boteco do R$</h1>
+    </header>
+
+    <nav>
+        <a href="https://www.boteco.live">Início</a>
+        <a href="#">Galeria</a>
+        <a href="https://www.boteco.live/lista">Lista de Filmes/Séries</a>
+    </nav>
+
+    <main>
+        <div id="loader">Carregando...</div> <!-- Loader para feedback visual -->
+        <h2>Adicionar Filme/Série</h2>
+        <form id="uploadForm">
+            <label for="nome">Nome do Filme/Série:</label>
+            <input type="text" id="nome" name="nome" required><br><br>
+            
+            <label for="imagem">Upload da Imagem:</label>
+            <input type="file" id="imagem" name="imagem" accept="image/*" required><br><br>
+            
+            <button type="submit">Adicionar</button>
+        </form>
+
+        <p id="statusMessage"></p> <!-- Mensagem de status -->
+
+        <h2>Lista de Filmes/Séries</h2>
+        <table id="filmesSeries">
+            <thead>
+                <tr>
+                    <th>Capa</th>
+                    <th>Filme/Série</th>
+                    <th>Assistido?</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Conteúdo gerado dinamicamente pelo JavaScript -->
+            </tbody>
+        </table>
+    </main>
+
+    <footer>
+        <p>&copy; Site do boteco!</p>
+    </footer>
+
+    <!-- Firebase App (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+
+    <!-- Firebase Storage (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+
+    <!-- Firebase Firestore (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
