@@ -169,8 +169,6 @@
                 fileInput.value = '';
                 nomeFilmeInput.value = '';
 
-
-
             } catch (error) {
                 exibirMensagem('Erro ao enviar o arquivo. Tente novamente.', 'error');
             }
@@ -197,7 +195,7 @@
                     <img src="${url}" alt="${nome}" style="max-height: 100px; width: auto;">
                 </td>
                 <td>${nome}</td>
-                <td>❌</td>
+                <td style="text-align: center;">❌</td>
             `;
             listaFilmes.appendChild(item);
         }
