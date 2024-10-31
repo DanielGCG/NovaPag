@@ -1,0 +1,13 @@
+{
+    "name": "t",
+    "version": "1.0.0",
+    "description": "Projeto de upload de arquivos com Firebase",
+    "main": "index.html",
+    "scripts": {
+      "start": "http-server . -p $PORT"
+    },
+    "dependencies": {
+      "http-server": "^0.12.3"
+    }
+  }
+  
