@@ -82,6 +82,14 @@
             color: red;
             border-color: red;
         }
+        .status-icon {
+            cursor: pointer;
+        }
+        .remove-icon {
+            color: red;
+            cursor: pointer;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
@@ -112,6 +120,7 @@
                     <th>Capa</th>
                     <th>Filme/Série</th>
                     <th>Assistido?</th>
+                    <th>Remover</th>
                 </tr>
             </thead>
             <tbody id="listaFilmes"></tbody>
@@ -124,7 +133,7 @@
     </footer>
 
     <script type="module">
-        import { getStorage, ref, uploadBytes, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-storage.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL, listAll, deleteObject } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-storage.js";
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
 
         const firebaseConfig = {
@@ -157,7 +166,7 @@
                 return;
             }
 
-            const newFileName = `${nomeFilme}.png`;
+            const newFileName = `${nomeFilme}(negativo).png`;
             const listaFilmesRef = ref(storage, `listaFilmes/${newFileName}`);
 
             try {
@@ -165,7 +174,7 @@
                 const downloadURL = await getDownloadURL(snapshot.ref);
                 exibirMensagem(`Arquivo enviado com sucesso!`, 'success');
 
-                adicionarItemLista(downloadURL, nomeFilme);
+                adicionarItemLista(downloadURL, nomeFilme, 'negativo');
                 fileInput.value = '';
                 nomeFilmeInput.value = '';
 
@@ -173,6 +182,14 @@
                 exibirMensagem('Erro ao enviar o arquivo. Tente novamente.', 'error');
             }
         }
+
+        // Adicionando ao escopo global
+        window.uploadFile = uploadFile;
+        window.adicionarItemLista = adicionarItemLista;
+        window.mudarStatus = mudarStatus;
+        window.listarFilmes = listarFilmes;
+        window.removerFilme = removerFilme;
+
 
         // Função para exibir mensagens de erro ou sucesso
         function exibirMensagem(mensagem, tipo) {
@@ -187,40 +204,95 @@
         }
 
         // Função para adicionar o item à lista de filmes
-        function adicionarItemLista(url, nome) {
+        function adicionarItemLista(url, nome, status) {
             const listaFilmes = document.getElementById('listaFilmes');
             const item = document.createElement('tr');
+            const novoStatus = status === 'negativo' ? 'positivo' : 'negativo';
+            const iconeStatus = status === 'negativo' ? '❌' : '✅';
+            const nomeArquivo = `${nome}(${status}).png`;
+
             item.innerHTML = `
                 <td style="text-align: center;">
                     <img src="${url}" alt="${nome}" style="max-height: 100px; width: auto;">
                 </td>
                 <td>${nome}</td>
-                <td style="text-align: center;">❌</td>
+                <td style="text-align: center;" class="status" data-nome-arquivo="${nomeArquivo}">
+                    <span class="status-icon" onclick="mudarStatus('${nomeArquivo}', '${url}', '${nome}', this)">${iconeStatus}</span>
+                </td>
+                <td style="text-align: center;">
+                    <span class="remove-icon" onclick="removerFilme('${nomeArquivo}', this)">🗑️</span>
+                </td>
             `;
             listaFilmes.appendChild(item);
         }
 
-        // Função para listar todos os filmes da pasta no Firebase Storage
-        async function listarFilmes() {
-            const listaFilmesRef = ref(storage, 'listaFilmes/');
-            
+        // Função para mudar o status do filme/série
+        async function mudarStatus(nomeArquivo, url, nome, elemento) {
+            const novoStatus = elemento.textContent === '❌' ? 'positivo' : 'negativo';
+            const novoNomeArquivo = `${nome}(${novoStatus}).png`;
+            const storageRef = ref(storage, `listaFilmes/${novoNomeArquivo}`);
+            const oldFileRef = ref(storage, `listaFilmes/${nomeArquivo}`);
+
+            // Atualiza o ícone exibido
+            elemento.textContent = novoStatus === 'positivo' ? '✅' : '❌';
+
             try {
-                const result = await listAll(listaFilmesRef);
-                result.items.forEach(async (itemRef) => {
-                    const url = await getDownloadURL(itemRef);
-                    adicionarItemLista(url, itemRef.name.replace('.png', ''));
-                });
+                // Faz uma cópia do arquivo com o novo nome
+                const blob = await (await fetch(url)).blob();
+                console.log('Blob criado com sucesso:', blob); // Verifica se o blob foi criado
+
+                // Faz o upload do novo arquivo
+                const uploadResult = await uploadBytes(storageRef, blob);
+                console.log('Arquivo enviado com sucesso:', uploadResult); // Verifica se o upload foi bem-sucedido
+
+                // Remove o arquivo antigo
+                await deleteObject(oldFileRef);
+                console.log('Arquivo antigo removido com sucesso:', nomeArquivo); // Verifica se o arquivo antigo foi removido
+
+                // Atualiza a tabela para refletir a mudança
+                const statusCell = elemento.closest('tr').querySelector('.status');
+                statusCell.dataset.nomeArquivo = novoNomeArquivo; // Atualiza o dataset com o novo nome
             } catch (error) {
-                console.error('Erro ao listar filmes:', error);
+                console.error('Erro ao mudar o status:', error);
+                exibirMensagem('Erro ao mudar o status. Tente novamente.', 'error');
             }
         }
 
-        // Chamar a função para listar filmes ao carregar a página
-        window.onload = listarFilmes;
+        // Função para remover o filme/série
+        async function removerFilme(nomeArquivo, elemento) {
+            const fileRef = ref(storage, `listaFilmes/${nomeArquivo}`);
+            try {
+                await deleteObject(fileRef);
+                elemento.closest('tr').remove();
+                exibirMensagem('Filme removido com sucesso!', 'success');
+            } catch (error) {
+                console.error('Erro ao remover o filme:', error);
+                exibirMensagem('Erro ao remover o filme. Tente novamente.', 'error');
+            }
+        }
 
-        // Definir a função uploadFile como global
-        window.uploadFile = uploadFile;
+        // Função para listar filmes/séries
+        async function listarFilmes() {
+            const listaFilmesRef = ref(storage, 'listaFilmes/');
+            try {
+                const result = await listAll(listaFilmesRef);
+                result.items.forEach(item => {
+                    getDownloadURL(item).then(url => {
+                        const nomeArquivo = item.name;
+                        const status = nomeArquivo.includes('positivo') ? 'positivo' : 'negativo';
+                        const nome = nomeArquivo.split('(')[0];
 
+                        adicionarItemLista(url, nome, status);
+                    });
+                });
+            } catch (error) {
+                console.error('Erro ao listar filmes:', error);
+                exibirMensagem('Erro ao listar filmes. Tente novamente.', 'error');
+            }
+        }
+
+        // Chamada inicial para listar filmes
+        listarFilmes();
     </script>
 </body>
 </html>
