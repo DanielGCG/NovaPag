@@ -143,7 +143,12 @@ async function listarFilmes() {
         const statusMap = {};
         await Promise.all(statusResult.items.map(async (item) => {
             const url = await getDownloadURL(item);
-            const statusData = await fetch(url).then(response => response.json());
+            const statusData = await fetch(url).then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            });
             statusMap[statusData.nome] = statusData.status; // Mapeia o status pelo nome do filme
         }));
 
@@ -160,6 +165,7 @@ async function listarFilmes() {
         exibirMensagem('Erro ao listar filmes. Tente novamente.', 'error');
     }
 }
+
 
 // Tornando as funções globais para o HTML
 window.uploadFile = uploadFile;
