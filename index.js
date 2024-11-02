@@ -5,9 +5,20 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configuração de CORS para permitir acesso de uma origem específica ou de todas as origens
+// Configuração de CORS para permitir acesso de uma origem específica ou múltiplas origens
+const allowedOrigins = ['https://www.boteco.live', 'http://localhost:3000'];
+
 app.use(cors({
-  origin: 'www.boteco.live', // Substitua pelo domínio da sua aplicação em produção
+  origin: (origin, callback) => {
+    // Permite requisições sem origem (ex: scripts internos)
+    if (!origin) return callback(null, true);
+    // Checa se a origem está na lista de permitidas
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 
