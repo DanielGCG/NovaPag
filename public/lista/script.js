@@ -1,13 +1,14 @@
 import { getStorage, ref, uploadBytes, getDownloadURL, listAll, deleteObject } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-storage.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
 
+// Configuração do Firebase
 const firebaseConfig = {
-    apiKey: "AIzaSyDuwnu2XcSTJ1YZkgD4570AtE6uKci_nDQ",
-    authDomain: "boteco-6fcfa.firebaseapp.com",
-    projectId: "boteco-6fcfa",
-    storageBucket: "boteco-6fcfa.appspot.com",
-    messagingSenderId: "531032694476",
-    appId: "1:531032694476:web:6e03bdd824b90fd2b2ec69"
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -29,35 +30,22 @@ async function uploadFile() {
         return;
     }
 
-    const newFileName = `${nomeFilme}.png`;
-    const listaFilmesRef = ref(storage, `listaFilmes/${newFileName}`);
+    const imageName = `${nomeFilme}.png`;
+    const imagePath = `listaFilmes/${imageName}`;
+    const imageRef = ref(storage, imagePath);
 
     try {
-        const snapshot = await uploadBytes(listaFilmesRef, file);
+        const snapshot = await uploadBytes(imageRef, file);
         const downloadURL = await getDownloadURL(snapshot.ref);
         exibirMensagem(`Arquivo enviado com sucesso!`, 'success');
-
-        // Armazenar o status no arquivo JSON
-        const statusData = {
-            nome: nomeFilme,
-            status: 'negativo' // inicial
-        };
-        await salvarStatus(nomeFilme, statusData);
-
-        adicionarItemLista(downloadURL, nomeFilme, 'negativo');
+        adicionarItemLista(downloadURL, nomeFilme);
         fileInput.value = '';
         nomeFilmeInput.value = '';
 
     } catch (error) {
-        exibirMensagem('Erro ao enviar o arquivo. Tente novamente.', 'error');
+        console.error('Erro ao enviar o arquivo:', error);
+        exibirMensagem('Erro ao enviar o arquivo. Verifique a conexão e tente novamente.', 'error');
     }
-}
-
-async function salvarStatus(nomeFilme, statusData) {
-    const statusFileName = `${nomeFilme}_status.json`;
-    const statusRef = ref(storage, `listaFilmes/status/${statusFileName}`);
-    const statusBlob = new Blob([JSON.stringify(statusData)], { type: 'application/json' });
-    await uploadBytes(statusRef, statusBlob);
 }
 
 function exibirMensagem(mensagem, tipo) {
@@ -71,19 +59,15 @@ function exibirMensagem(mensagem, tipo) {
     }, 5000);
 }
 
-function adicionarItemLista(url, nome, status) {
+function adicionarItemLista(url, nome) {
     const listaFilmes = document.getElementById('listaFilmes');
     const item = document.createElement('tr');
-    const iconeStatus = status === 'negativo' ? '❌' : '✅';
     
     item.innerHTML = `
         <td style="text-align: center;">
             <img src="${url}" alt="${nome}" style="max-height: 100px; width: auto;">
         </td>
         <td>${nome}</td>
-        <td style="text-align: center;" class="status">
-            <span class="status-icon" onclick="mudarStatus('${nome}', this)">${iconeStatus}</span>
-        </td>
         <td style="text-align: center;">
             <span class="remove-icon" onclick="removerFilme('${nome}', this)">🗑️</span>
         </td>
@@ -91,39 +75,12 @@ function adicionarItemLista(url, nome, status) {
     listaFilmes.appendChild(item);
 }
 
-async function mudarStatus(nomeFilme, elemento) {
-    const novoStatus = elemento.textContent === '❌' ? 'positivo' : 'negativo';
-    elemento.textContent = novoStatus === 'positivo' ? '✅' : '❌';
-
-    // Atualizar o arquivo JSON de status
-    await atualizarStatus(nomeFilme, novoStatus);
-
-    exibirMensagem(`Status do arquivo atualizado para ${novoStatus} com sucesso!`, 'success');
-}
-
-async function atualizarStatus(nomeFilme, novoStatus) {
-    const statusFileName = `${nomeFilme}_status.json`;
-    const statusRef = ref(storage, `listaFilmes/status/${statusFileName}`);
-
-    const statusData = {
-        nome: nomeFilme,
-        status: novoStatus
-    };
-    const statusBlob = new Blob([JSON.stringify(statusData)], { type: 'application/json' });
-    await uploadBytes(statusRef, statusBlob);
-}
-
 async function removerFilme(nomeFilme, elemento) {
-    const fileRef = ref(storage, `listaFilmes/${nomeFilme}.png`);
+    const imagePath = `listaFilmes/${nomeFilme}.png`;
+    
     try {
-        await deleteObject(fileRef);
+        await deleteObject(ref(storage, imagePath));
         elemento.closest('tr').remove();
-        
-        // Remover o arquivo JSON de status
-        const statusFileName = `${nomeFilme}_status.json`;
-        const statusRef = ref(storage, `listaFilmes/status/${statusFileName}`);
-        await deleteObject(statusRef);
-
         exibirMensagem('Filme removido com sucesso!', 'success');
     } catch (error) {
         console.error('Erro ao remover o filme:', error);
@@ -133,44 +90,37 @@ async function removerFilme(nomeFilme, elemento) {
 
 async function listarFilmes() {
     const listaFilmesRef = ref(storage, 'listaFilmes/');
-    const statusRef = ref(storage, 'listaFilmes/status/');
-    
+    const listaFilmes = document.getElementById('listaFilmes');
+
     try {
         const result = await listAll(listaFilmesRef);
-        const statusResult = await listAll(statusRef);
-        
-        const statusMap = {};
-        await Promise.all(statusResult.items.map(async (item) => {
-            const url = await getDownloadURL(item);
+        if (result.items.length === 0) {
+            exibirMensagem('Nenhum filme encontrado. Adicione novos filmes para começar!', 'info');
+            return;
+        }
+
+        await Promise.all(result.items.map(async (itemRef) => {
+            const nomeFilme = itemRef.name.replace('.png', '');
+
             try {
-                const statusData = await fetch(url).then(response => response.json());
-                statusMap[statusData.nome] = statusData.status;
+                const imageURL = await getDownloadURL(itemRef);
+                adicionarItemLista(imageURL, nomeFilme);
             } catch (error) {
-                console.error('Erro ao obter status:', error);
+                console.error(`Erro ao obter dados do filme ${nomeFilme}:`, error);
             }
         }));
 
-        await Promise.all(result.items.map(async (item) => {
-            const url = await getDownloadURL(item);
-            const nomeArquivo = item.name.replace('.png', '');
-            const status = statusMap[nomeArquivo] || 'negativo';
-            
-            adicionarItemLista(url, nomeArquivo, status);
-        }));
     } catch (error) {
         console.error('Erro ao listar filmes:', error);
         exibirMensagem('Erro ao listar filmes. Tente novamente.', 'error');
     }
 }
 
-
-// Tornando as funções globais para o HTML
+// Expondo as funções para serem usadas no HTML
 window.uploadFile = uploadFile;
 window.exibirMensagem = exibirMensagem;
 window.adicionarItemLista = adicionarItemLista;
-window.mudarStatus = mudarStatus;
 window.removerFilme = removerFilme;
 window.listarFilmes = listarFilmes;
 
-// Chamada inicial para listar filmes
 listarFilmes();
