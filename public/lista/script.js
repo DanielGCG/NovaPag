@@ -139,24 +139,21 @@ async function listarFilmes() {
         const result = await listAll(listaFilmesRef);
         const statusResult = await listAll(statusRef);
         
-        // Criar um mapeamento de status
         const statusMap = {};
         await Promise.all(statusResult.items.map(async (item) => {
             const url = await getDownloadURL(item);
-            const statusData = await fetch(url).then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            });
-            statusMap[statusData.nome] = statusData.status; // Mapeia o status pelo nome do filme
+            try {
+                const statusData = await fetch(url).then(response => response.json());
+                statusMap[statusData.nome] = statusData.status;
+            } catch (error) {
+                console.error('Erro ao obter status:', error);
+            }
         }));
 
-        // Adiciona cada filme à lista
         await Promise.all(result.items.map(async (item) => {
             const url = await getDownloadURL(item);
-            const nomeArquivo = item.name.replace('.png', ''); // Remove a extensão
-            const status = statusMap[nomeArquivo] || 'negativo'; // Usa o status mapeado ou 'negativo' como padrão
+            const nomeArquivo = item.name.replace('.png', '');
+            const status = statusMap[nomeArquivo] || 'negativo';
             
             adicionarItemLista(url, nomeArquivo, status);
         }));
